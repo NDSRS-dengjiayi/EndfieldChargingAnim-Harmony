@@ -336,8 +336,11 @@ class EndfieldHudView(
         // Left side: bolt slot is drawn by drawBolt, so start after column 0 + 1 + 2.
         var x = left + (COL_PAD_LEFT + COL_BOLT_SLOT + COL_GAP) * unit
 
-        val whValue = snapshot?.remainingMwh?.let { formatMwh(it) } ?: "--"
-        val whMax = snapshot?.fullMwh?.let { "/" + formatMwh(it) } ?: ""
+        // Energy figures come from battery sysfs, which an unprivileged app cannot read. When the
+        // full capacity is unknown (<= 0) show a placeholder instead of a negative mWh number.
+        val fullEnergy = snapshot?.fullMwh?.takeIf { it > 0f }
+        val whValue = fullEnergy?.let { formatMwh(snapshot!!.remainingMwh) } ?: "--"
+        val whMax = fullEnergy?.let { "/" + formatMwh(it) } ?: ""
 
         textPaint.textAlign = Paint.Align.LEFT
         textPaint.typeface = medium

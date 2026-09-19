@@ -1,11 +1,16 @@
 package com.lemoneko.endfieldcharge.ui
 
+import android.Manifest
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.app.Activity
+import android.content.Intent
 import android.graphics.Color
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -29,6 +34,8 @@ import com.lemoneko.endfieldcharge.core.timeline.HudTimeline
 import com.lemoneko.endfieldcharge.debug.FrameSheetRenderer
 import com.lemoneko.endfieldcharge.debug.SysfsProbe
 import com.lemoneko.endfieldcharge.settings.SettingsRepository
+import com.lemoneko.endfieldcharge.standalone.StandaloneLauncher
+import com.lemoneko.endfieldcharge.standalone.StandalonePrefs
 import java.io.File
 
 /**
@@ -226,6 +233,8 @@ class MainActivity : Activity() {
             },
         )
 
+        column.addView(buildStandaloneSection())
+
         column.addView(label("language"))
         column.addView(languageSpinner())
 
@@ -252,6 +261,74 @@ class MainActivity : Activity() {
             setPadding((16 * density).toInt(), (4 * density).toInt(), (16 * density).toInt(), 0)
         }
         column.addView(status)
+    }
+
+    // ---------------- standalone (no-root) mode ----------------
+
+    /**
+     * Controls for the no-root mode: a master switch, immediate test launches, and the two EMUI
+     * background-survival grants (battery optimisation exemption + manual auto-start).
+     */
+    private fun buildStandaloneSection(): LinearLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        addView(label("standalone mode (no root, Huawei)"))
+        addView(
+            Switch(this@MainActivity).apply {
+                text = "Enable standalone charge animation"
+                setTextColor(Color.WHITE)
+                setPadding((16 * density).toInt(), (8 * density).toInt(), (16 * density).toInt(), 0)
+                isChecked = StandalonePrefs.isEnabled(this@MainActivity)
+                setOnCheckedChangeListener { _, checked ->
+                    StandalonePrefs.setEnabled(this@MainActivity, checked)
+                    if (checked && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1001)
+                    }
+                }
+            },
+        )
+        addView(
+            LinearLayout(this@MainActivity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                addView(button("Test charge") {
+                    StandaloneLauncher.launch(this@MainActivity, HudPlayMode.CHARGE)
+                })
+                addView(button("Test unplug") {
+                    StandaloneLauncher.launch(this@MainActivity, HudPlayMode.UNPLUG)
+                })
+            },
+        )
+        addView(button("Battery: allow background") { requestIgnoreBatteryOptimization() })
+        addView(button("App info: enable auto-start") { openAppDetails() })
+        addView(
+            TextView(this@MainActivity).apply {
+                setTextColor(Color.LTGRAY)
+                textSize = 11f
+                setPadding((16 * density).toInt(), (8 * density).toInt(), (16 * density).toInt(), 0)
+                text = "No-root mode plays the HUD over the lock screen from a normal app process. " +
+                    "It cannot hide Huawei's own charging popup. EMUI kills background receivers: " +
+                    "set App launch to manual with all three switches on, and allow background activity."
+            },
+        )
+    }
+
+    private fun requestIgnoreBatteryOptimization() {
+        runCatching {
+            startActivity(
+                Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+                    .setData(Uri.parse("package:$packageName")),
+            )
+        }.onFailure {
+            runCatching { startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)) }
+        }
+    }
+
+    private fun openAppDetails() {
+        runCatching {
+            startActivity(
+                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                    .setData(Uri.parse("package:$packageName")),
+            )
+        }
     }
 
     // ---------------- settings plumbing ----------------
