@@ -336,11 +336,12 @@ class EndfieldHudView(
         // Left side: bolt slot is drawn by drawBolt, so start after column 0 + 1 + 2.
         var x = left + (COL_PAD_LEFT + COL_BOLT_SLOT + COL_GAP) * unit
 
-        // Energy figures come from battery sysfs, which an unprivileged app cannot read. When the
-        // full capacity is unknown (<= 0) show a placeholder instead of a negative mWh number.
-        val fullEnergy = snapshot?.fullMwh?.takeIf { it > 0f }
-        val whValue = fullEnergy?.let { formatMwh(snapshot!!.remainingMwh) } ?: "--"
-        val whMax = fullEnergy?.let { "/" + formatMwh(it) } ?: ""
+        // Capacity is user-configurable mAh (auto-detected once, then editable). Energy sysfs is
+        // unreadable for an unprivileged app, so the HUD shows mAh: charged = total * level%.
+        // When the total is unknown (<= 0) show a placeholder instead of bogus numbers.
+        val fullCapacity = snapshot?.fullMah?.takeIf { it > 0f }
+        val whValue = fullCapacity?.let { formatNum(snapshot!!.remainingMah) } ?: "--"
+        val whMax = fullCapacity?.let { "/" + formatNum(it) } ?: ""
 
         textPaint.textAlign = Paint.Align.LEFT
         textPaint.typeface = medium
@@ -485,7 +486,7 @@ class EndfieldHudView(
 
     private fun alpha(value: Float) = (value.coerceIn(0f, 1f) * 255f).toInt()
 
-    private fun formatMwh(value: Float) = value.toInt().toString()
+    private fun formatNum(value: Float) = value.toInt().toString()
 
     private companion object {
         const val PILL_WIDTH = 560f

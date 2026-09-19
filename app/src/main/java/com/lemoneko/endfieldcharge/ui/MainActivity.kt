@@ -15,10 +15,12 @@ import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
+import android.text.InputType
 import android.view.animation.LinearInterpolator
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ScrollView
@@ -26,7 +28,9 @@ import android.widget.SeekBar
 import android.widget.Spinner
 import android.widget.Switch
 import android.widget.TextView
+import android.widget.Toast
 import com.lemoneko.endfieldcharge.BuildConfig
+import com.lemoneko.endfieldcharge.core.BatterySnapshot
 import com.lemoneko.endfieldcharge.core.HudMetrics
 import com.lemoneko.endfieldcharge.core.HudPlayMode
 import com.lemoneko.endfieldcharge.core.settings.HudSettings
@@ -132,7 +136,7 @@ class MainActivity : Activity() {
             (200 * density).toInt(),
         )
         preview = EndfieldHudView(context).apply {
-            setSnapshot(FrameSheetRenderer.SAMPLE_SNAPSHOT)
+            setSnapshot(buildPreviewSnapshot())
             layoutParams = FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -263,11 +267,24 @@ class MainActivity : Activity() {
         column.addView(status)
     }
 
+    /** Mid-charge preview sample at the currently configured total capacity. */
+    private fun buildPreviewSnapshot(): BatterySnapshot {
+        val capacityMah = StandalonePrefs.getCapacityMah(this)
+        return BatterySnapshot(
+            level = 76,
+            plugged = 1,
+            status = 2,
+            voltageUv = 4_400_000L,
+            chargeFullUah = capacityMah * 1000L,
+            chargeCounterRaw = -1L,
+        )
+    }
+
     // ---------------- standalone (no-root) mode ----------------
 
     /**
-     * Controls for the no-root mode: a master switch, immediate test launches, and the two EMUI
-     * background-survival grants (battery optimisation exemption + manual auto-start).
+     * Controls for the no-root mode: a master switch, a user-editable battery total capacity,
+     * immediate test launches, and the two EMUI background-survival grants.
      */
     private fun buildStandaloneSection(): LinearLayout = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
@@ -284,6 +301,45 @@ class MainActivity : Activity() {
                         requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1001)
                     }
                 }
+            },
+        )
+        addView(label("battery total capacity (mAh)"))
+        val capacityInput = EditText(this@MainActivity).apply {
+            inputType = InputType.TYPE_CLASS_NUMBER
+            setText(StandalonePrefs.getCapacityMah(this@MainActivity).toString())
+            setTextColor(Color.WHITE)
+            setHintTextColor(Color.GRAY)
+            hint = "e.g. 4200"
+            setPadding((16 * density).toInt(), (4 * density).toInt(), (16 * density).toInt(), 0)
+        }
+        addView(capacityInput)
+        addView(
+            LinearLayout(this@MainActivity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                addView(button("Save capacity") {
+                    val parsed = capacityInput.text.toString().trim().toIntOrNull()
+                    if (parsed == null) {
+                        Toast.makeText(this@MainActivity, "Enter a number", Toast.LENGTH_SHORT).show()
+                        return@button
+                    }
+                    StandalonePrefs.setCapacityMah(this@MainActivity, parsed)
+                    preview.setSnapshot(buildPreviewSnapshot())
+                    val saved = StandalonePrefs.getCapacityMah(this@MainActivity)
+                    capacityInput.setText(saved.toString())
+                    Toast.makeText(this@MainActivity, "Saved $saved mAh", Toast.LENGTH_SHORT).show()
+                })
+                addView(button("Auto detect") {
+                    val detected = StandalonePrefs.detectCapacityMah(this@MainActivity)
+                    StandalonePrefs.setCapacityMah(this@MainActivity, detected)
+                    preview.setSnapshot(buildPreviewSnapshot())
+                    capacityInput.setText(detected.toString())
+                    val note = if (detected == StandalonePrefs.FALLBACK_CAPACITY_MAH) {
+                        "Detection failed, using default $detected mAh"
+                    } else {
+                        "Detected $detected mAh"
+                    }
+                    Toast.makeText(this@MainActivity, note, Toast.LENGTH_SHORT).show()
+                })
             },
         )
         addView(

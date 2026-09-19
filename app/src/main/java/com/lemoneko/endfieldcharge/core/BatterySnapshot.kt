@@ -46,10 +46,21 @@ data class BatterySnapshot(
     val remainingMwh: Float
         get() = fullMwh * level / 100f
 
+    /** Full capacity in mAh (charge_full is in micro-amp-hours). */
+    val fullMah: Float
+        get() = chargeFullUah / 1000f
+
+    /** Remaining capacity in mAh, derived from the level. */
+    val remainingMah: Float
+        get() = fullMah * level / 100f
+
     companion object {
         const val DEFAULT_NOMINAL_VOLT = 3.87f
 
         private const val SYSFS = "/sys/class/power_supply/battery"
+
+        /** Huawei/Kirin kernels expose the supply capitalised as "Battery". */
+        private val SYSFS_DIRS = listOf(SYSFS, "/sys/class/power_supply/Battery")
 
         fun from(intent: Intent): BatterySnapshot {
             val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
@@ -66,6 +77,9 @@ data class BatterySnapshot(
         }
 
         private fun readLong(node: String): Long =
-            runCatching { File(SYSFS, node).readText().trim().toLong() }.getOrDefault(-1L)
+            SYSFS_DIRS
+                .map { runCatching { File(it, node).readText().trim().toLong() }.getOrNull() }
+                .firstOrNull { it != null }
+                ?: -1L
     }
 }

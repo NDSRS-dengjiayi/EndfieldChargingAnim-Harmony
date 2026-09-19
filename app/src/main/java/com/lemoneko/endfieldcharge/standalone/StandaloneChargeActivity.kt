@@ -67,7 +67,7 @@ class StandaloneChargeActivity : Activity() {
         hud = EndfieldHudView(this).apply {
             widthRatio = settings.widthRatio
             language = settings.language
-            setSnapshot(currentSnapshot())
+            setSnapshot(currentSnapshot(StandalonePrefs.getCapacityMah(this@StandaloneChargeActivity)))
         }
         root.addView(
             hud,
@@ -120,13 +120,28 @@ class StandaloneChargeActivity : Activity() {
     }
 
     /**
-     * Reads the sticky [Intent.ACTION_BATTERY_CHANGED] intent (level, plug state, status). Energy
-     * figures live in sysfs and are unreadable for an unprivileged app, so they stay -1 and the
-     * HUD renders "--" instead.
+     * Builds the snapshot for the unprivileged standalone host. Level/plug/status/voltage come
+     * from the sticky [Intent.ACTION_BATTERY_CHANGED] intent; sysfs energy nodes are not readable,
+     * so the total capacity is the user-configured/auto-detected [capacityMah] and charged mAh is
+     * derived as total * level%.
      */
-    private fun currentSnapshot(): BatterySnapshot {
+    private fun currentSnapshot(capacityMah: Int): BatterySnapshot {
         val sticky = registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
-        if (sticky != null) return BatterySnapshot.from(sticky)
+        if (sticky != null) {
+            val level = sticky.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+            val scale = sticky.getIntExtra(BatteryManager.EXTRA_SCALE, 100)
+            val pct = if (level >= 0 && scale > 0) level * 100 / scale else -1
+            // EXTRA_VOLTAGE is delivered in millivolts.
+            val voltageMv = sticky.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1)
+            return BatterySnapshot(
+                level = pct,
+                plugged = sticky.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0),
+                status = sticky.getIntExtra(BatteryManager.EXTRA_STATUS, -1),
+                voltageUv = if (voltageMv > 0) voltageMv * 1000L else -1L,
+                chargeFullUah = capacityMah * 1000L,
+                chargeCounterRaw = -1L,
+            )
+        }
 
         val battery = getSystemService(Context.BATTERY_SERVICE) as BatteryManager
         return BatterySnapshot(
@@ -136,7 +151,7 @@ class StandaloneChargeActivity : Activity() {
             plugged = 0,
             status = 0,
             voltageUv = -1L,
-            chargeFullUah = -1L,
+            chargeFullUah = capacityMah * 1000L,
             chargeCounterRaw = -1L,
         )
     }
