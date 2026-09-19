@@ -11,7 +11,9 @@ android {
 
     defaultConfig {
         applicationId = "com.lemoneko.endfieldcharge"
-        minSdk = 35
+        // The hooks are only verified on Android 15/16, but the settings/preview app only needs
+        // WindowInsets (API 30), so keep the install floor at 31 to allow sideloading previews.
+        minSdk = 31
         targetSdk = 35
         versionCode = 1
         versionName = "0.1.0"
