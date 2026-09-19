@@ -3,6 +3,7 @@ package com.lemoneko.endfieldcharge.standalone
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import com.lemoneko.endfieldcharge.core.HudPlayMode
 import com.lemoneko.endfieldcharge.core.settings.HudSettings
 import com.lemoneko.endfieldcharge.settings.SettingsRepository
@@ -18,12 +19,14 @@ import com.lemoneko.endfieldcharge.settings.SettingsRepository
 class ChargeEventReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
+        Log.i(TAG, "received action=${intent.action} standaloneEnabled=${StandalonePrefs.isEnabled(context)}")
         if (!StandalonePrefs.isEnabled(context)) return
         val settings = runCatching { SettingsRepository.current() }
             .getOrDefault(HudSettings.Default)
 
         when (intent.action) {
             Intent.ACTION_POWER_CONNECTED -> {
+                Log.i(TAG, "power connected -> launch CHARGE")
                 if (settings.wakeOnPlug) StandaloneScreen.wake(context)
                 StandaloneLauncher.launch(context, HudPlayMode.CHARGE)
             }
@@ -31,10 +34,15 @@ class ChargeEventReceiver : BroadcastReceiver() {
             Intent.ACTION_POWER_DISCONNECTED -> {
                 // Delivery during deep doze (screen off) is best effort and cannot be guaranteed
                 // without system privileges.
+                Log.i(TAG, "power disconnected -> playOnUnplug=${settings.playOnUnplug}")
                 if (settings.playOnUnplug) {
                     StandaloneLauncher.launch(context, HudPlayMode.UNPLUG)
                 }
             }
         }
+    }
+
+    private companion object {
+        const val TAG = "EndfieldCharge/Rx"
     }
 }

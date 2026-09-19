@@ -41,6 +41,7 @@ class StandaloneChargeActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        android.util.Log.i("EndfieldCharge/Hud", "StandaloneChargeActivity onCreate")
 
         setShowWhenLocked(true)
         setTurnScreenOn(true)
