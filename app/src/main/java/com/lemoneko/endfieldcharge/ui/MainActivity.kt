@@ -377,9 +377,13 @@ class MainActivity : Activity() {
                 setTextColor(Color.LTGRAY)
                 textSize = 11f
                 setPadding((16 * density).toInt(), (8 * density).toInt(), (16 * density).toInt(), 0)
-                text = "No-root mode plays the HUD over the lock screen from a normal app process. " +
-                    "It cannot hide Huawei's own charging popup. EMUI kills background receivers: " +
-                    "set App launch to manual with all three switches on, and allow background activity."
+                text = "No-root mode plays the HUD from a normal app process and cannot hide Huawei's " +
+                    "own charging popup. Required one-time setup on EMUI/HarmonyOS:\n" +
+                    "1) grant 'Display over other apps' above;\n" +
+                    "2) App info > Battery > Launch management > Manual, turn ON all 3 switches " +
+                    "(auto-launch, secondary launch, background activity) — needed to restore the " +
+                    "monitor after reboot;\n" +
+                    "3) allow background in the Battery button."
             },
         )
     }

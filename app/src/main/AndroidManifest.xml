@@ -63,12 +63,14 @@
                 android:value="Detects charger plug/unplug to play a custom charging animation" />
         </service>
 
-        <!-- Restart the monitor after reboot / Huawei quick boot. -->
+        <!-- Restart the monitor after reboot / Huawei quick boot, and on first unlock as a
+             fallback for ROMs that block BOOT_COMPLETED via auto-start management. -->
         <receiver
             android:name=".standalone.BootReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.USER_PRESENT" />
                 <action android:name="huawei.intent.action.QUICKBOOT_POWERON" />
                 <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
             </intent-filter>
