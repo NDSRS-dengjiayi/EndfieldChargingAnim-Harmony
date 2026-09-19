@@ -306,6 +306,8 @@ class MainActivity : Activity() {
                             requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1001)
                         }
                         StandaloneMonitorService.start(this@MainActivity)
+                        // Without this, EMUI silently blocks the HUD while the app is in background.
+                        if (!Settings.canDrawOverlays(this@MainActivity)) openOverlaySettings()
                     } else {
                         StandaloneMonitorService.stop(this@MainActivity)
                     }
@@ -363,6 +365,12 @@ class MainActivity : Activity() {
             },
         )
         addView(button("Battery: allow background") { requestIgnoreBatteryOptimization() })
+        addView(
+            button("") { openOverlaySettings() }.apply {
+                overlayButton = this
+                updateOverlayButtonLabel()
+            },
+        )
         addView(button("App info: enable auto-start") { openAppDetails() })
         addView(
             TextView(this@MainActivity).apply {
@@ -394,6 +402,35 @@ class MainActivity : Activity() {
                     .setData(Uri.parse("package:$packageName")),
             )
         }
+    }
+
+    // ---------------- overlay permission (background HUD launch) ----------------
+
+    private var overlayButton: Button? = null
+
+    private fun canDrawOverlays(): Boolean = Settings.canDrawOverlays(this)
+
+    private fun updateOverlayButtonLabel() {
+        overlayButton?.text = if (canDrawOverlays()) {
+            "Display over other apps: granted"
+        } else {
+            "Display over other apps: GRANT (required)"
+        }
+    }
+
+    private fun openOverlaySettings() {
+        runCatching {
+            startActivity(
+                Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")),
+            )
+        }.onFailure {
+            runCatching { startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)) }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        updateOverlayButtonLabel()
     }
 
     // ---------------- settings plumbing ----------------
