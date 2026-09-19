@@ -39,6 +39,7 @@ import com.lemoneko.endfieldcharge.debug.FrameSheetRenderer
 import com.lemoneko.endfieldcharge.debug.SysfsProbe
 import com.lemoneko.endfieldcharge.settings.SettingsRepository
 import com.lemoneko.endfieldcharge.standalone.StandaloneLauncher
+import com.lemoneko.endfieldcharge.standalone.StandaloneMonitorService
 import com.lemoneko.endfieldcharge.standalone.StandalonePrefs
 import java.io.File
 
@@ -73,6 +74,9 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         SettingsRepository.start(this)
+
+        // After an upgrade or a process death, make sure the monitor runs whenever enabled.
+        if (StandalonePrefs.isEnabled(this)) StandaloneMonitorService.start(this)
 
         density = resources.displayMetrics.density
         insetPx = HudMetrics.topInsetPx(this)
@@ -297,8 +301,13 @@ class MainActivity : Activity() {
                 isChecked = StandalonePrefs.isEnabled(this@MainActivity)
                 setOnCheckedChangeListener { _, checked ->
                     StandalonePrefs.setEnabled(this@MainActivity, checked)
-                    if (checked && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1001)
+                    if (checked) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1001)
+                        }
+                        StandaloneMonitorService.start(this@MainActivity)
+                    } else {
+                        StandaloneMonitorService.stop(this@MainActivity)
                     }
                 }
             },

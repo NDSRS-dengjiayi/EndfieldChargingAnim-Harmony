@@ -6,6 +6,13 @@
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <!-- Persistent monitor service that survives EMUI background freezing. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- "Display over other apps": on EMUI this also exempts the app from background-activity-start
+         blocking, which is required to show the HUD from the monitor service. -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <application
         android:name=".EndfieldApp"
@@ -36,13 +43,35 @@
             android:theme="@style/Theme.EndfieldCharge.Standalone"
             android:turnScreenOn="true" />
 
-        <!-- Protected system broadcasts, deliverable to manifest receivers. -->
+        <!-- Protected system broadcasts, deliverable to manifest receivers (best-effort fallback). -->
         <receiver
             android:name=".standalone.ChargeEventReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.ACTION_POWER_CONNECTED" />
                 <action android:name="android.intent.action.ACTION_POWER_DISCONNECTED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Persistent foreground monitor: keeps the dynamic charger receiver alive while enabled. -->
+        <service
+            android:name=".standalone.StandaloneMonitorService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Detects charger plug/unplug to play a custom charging animation" />
+        </service>
+
+        <!-- Restart the monitor after reboot / Huawei quick boot. -->
+        <receiver
+            android:name=".standalone.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+                <action android:name="huawei.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
             </intent-filter>
         </receiver>
 
