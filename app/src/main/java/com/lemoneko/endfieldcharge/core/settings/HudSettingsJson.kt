@@ -5,8 +5,8 @@ import org.json.JSONObject
 /**
  * JSON form of [HudSettings].
  *
- * Used by the content provider that carries settings from the module app into the hooked SystemUI
- * process. `org.json` is part of the platform, so this needs no dependency.
+ * Used by the app's in-process SettingsProvider to persist display preferences. `org.json` is part
+ * of the platform, so this needs no dependency.
  */
 object HudSettingsJson {
 

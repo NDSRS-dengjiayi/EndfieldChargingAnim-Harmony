@@ -4,13 +4,10 @@ import android.content.Context
 import android.util.Log
 
 /**
- * App-local preferences for the no-root standalone mode.
+ * App-local preferences for the no-root standalone mode (file `standalone`): the master enable
+ * switch and the battery total capacity.
  *
- * Deliberately separate from [com.lemoneko.endfieldcharge.core.settings.HudSettings.enabled]: that
- * flag means "replace the ROM animation via the Xposed hook", whereas this one means "play the HUD
- * from an ordinary app process".
- *
- * The battery total capacity is also kept here. It is auto-detected once from the framework's
+ * The battery total capacity is auto-detected once from the framework's
  * [android.os.BatteryManager]/PowerProfile profile, falling back to [FALLBACK_CAPACITY_MAH], and
  * the user can override it manually. The HUD derives charged mAh as total * level%.
  */

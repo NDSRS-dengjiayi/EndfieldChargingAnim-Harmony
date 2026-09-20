@@ -10,13 +10,10 @@ import com.lemoneko.endfieldcharge.core.settings.ContentSettings
 import com.lemoneko.endfieldcharge.core.settings.HudSettingsJson
 
 /**
- * Carries settings from the module app into the hooked SystemUI process.
+ * In-app store of record for the HUD display settings.
  *
- * Exported without a permission on purpose: the payload is a handful of display preferences, and a
- * signature permission would not work because SystemUI is not signed with this key.
- *
- * The provider is the store of record; [SettingsRepository] writes through it so a single write
- * both persists and notifies observers on the hook side.
+ * The UI writes through [SettingsRepository]; the provider persists the JSON and notifies
+ * resolver observers. Only the `call` channel is implemented (`get` / `set`).
  */
 class SettingsProvider : ContentProvider() {
 

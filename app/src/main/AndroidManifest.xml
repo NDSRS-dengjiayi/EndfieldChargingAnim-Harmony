@@ -9,7 +9,6 @@
     <!-- Persistent monitor service that survives EMUI background freezing. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- "Display over other apps": on EMUI this also exempts the app from background-activity-start
          blocking, which is required to show the HUD from the monitor service. -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
@@ -63,23 +62,10 @@
                 android:value="Detects charger plug/unplug to play a custom charging animation" />
         </service>
 
-        <!-- Restart the monitor after reboot / Huawei quick boot, and on first unlock as a
-             fallback for ROMs that block BOOT_COMPLETED via auto-start management. -->
-        <receiver
-            android:name=".standalone.BootReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="android.intent.action.USER_PRESENT" />
-                <action android:name="huawei.intent.action.QUICKBOOT_POWERON" />
-                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
-            </intent-filter>
-        </receiver>
-
         <provider
             android:name=".settings.SettingsProvider"
             android:authorities="${applicationId}.settings"
-            android:exported="true" />
+            android:exported="false" />
 
     </application>
 

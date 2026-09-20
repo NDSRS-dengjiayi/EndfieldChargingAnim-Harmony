@@ -9,11 +9,10 @@ import com.lemoneko.endfieldcharge.core.settings.HudSettings
 import com.lemoneko.endfieldcharge.core.settings.HudSettingsJson
 
 /**
- * Settings store for the module app.
+ * Settings store used by the UI and the monitor service.
  *
- * Everything goes through [SettingsProvider], which both persists the value and notifies the
- * hooked SystemUI process, so there is exactly one write path and no chance of the app and the
- * hook disagreeing about where the settings live.
+ * Everything goes through [SettingsProvider], which persists the value and notifies resolver
+ * observers, so there is exactly one write path within the app.
  */
 object SettingsRepository {
 

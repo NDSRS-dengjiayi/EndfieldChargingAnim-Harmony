@@ -6,7 +6,7 @@ import java.util.Locale
 /**
  * HUD copy, mirroring `zmd-charge`'s `Localization` (`IsChinese ? ... : ...`).
  *
- * Only the charge strings are ported: the power saver variants belong to a feature this module
+ * Only the charge strings are ported: the power saver variants belong to a feature this app
  * does not implement.
  */
 internal object HudStrings {

@@ -8,11 +8,10 @@ import android.view.WindowManager
  * Screen geometry the HUD has to respect.
  *
  * The reference sits 4 logical pixels below the top of the screen, but a phone has a punch hole
- * there: on the K60 the display cutout is 120 px (about 34 dp) tall and centred, which is exactly
- * where the bolt sits in states A and B. The HUD is therefore placed below the cutout instead of
- * copying the desktop offset.
+ * there, so the HUD is placed below the display cutout / status bar instead of copying the desktop
+ * offset.
  *
- * The preview screen and the SystemUI overlay both read the offset from here, so what the slider
+ * The preview screen and the standalone HUD both read the offset from here, so what the slider
  * shows is what the overlay does.
  */
 object HudMetrics {

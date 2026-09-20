@@ -6,11 +6,14 @@ import com.lemoneko.endfieldcharge.core.timeline.AnimationOptions
  * Everything the user can tune.
  *
  * Deliberately free of Android imports so the defaults and the clamping can be unit tested.
- * Persistence and delivery to the hooked process live in [HudSettingsJson] and the module app's
- * SettingsProvider.
+ * Persistence lives in [HudSettingsJson] and the app's SettingsProvider.
  */
 data class HudSettings(
-    /** Master switch. When off, the ROM keeps its own animation and nothing is drawn. */
+    /**
+     * Legacy switch carried over from the upstream Xposed module (it used to hand the ROM
+     * animation back). The standalone mode ignores it and gates on StandalonePrefs instead; it is
+     * kept in the JSON schema for backward compatibility with stored settings.
+     */
     val enabled: Boolean = true,
     /** Fraction of the screen width the pill may occupy. 560 design units are scaled to this. */
     val widthRatio: Float = DEFAULT_WIDTH_RATIO,

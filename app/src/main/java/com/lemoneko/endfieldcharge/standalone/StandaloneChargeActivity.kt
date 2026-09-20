@@ -28,11 +28,11 @@ import com.lemoneko.endfieldcharge.ui.EndfieldHudView
 /**
  * No-root host for the charging HUD.
  *
- * A translucent, show-when-locked activity that plays the exact same [EndfieldHudView] /
- * [HudTimeline] as the SystemUI hook, but in an ordinary app process. It shows directly over the
- * keyguard without unlocking the device, then finishes itself when the timeline ends (tap also
- * dismisses). It cannot suppress the ROM's own charging animation - that requires hooking
- * SystemUI - so the OEM popup may still appear alongside.
+ * A translucent, show-when-locked activity that plays the [EndfieldHudView] / [HudTimeline] in an
+ * ordinary app process. It shows directly over the keyguard without unlocking the device, then
+ * finishes itself when the timeline ends (tap also dismisses). It cannot suppress the ROM's own
+ * charging animation - that requires system privileges or a SystemUI hook - so the Huawei popup
+ * may still appear alongside.
  */
 class StandaloneChargeActivity : Activity() {
 

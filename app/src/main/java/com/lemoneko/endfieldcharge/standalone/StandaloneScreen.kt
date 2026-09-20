@@ -6,9 +6,9 @@ import android.os.PowerManager
 /**
  * Turns the screen on when the charger is connected while the screen is off.
  *
- * Without hooking SystemUI the module cannot call the hidden `PowerManager.wakeUp` (it is a
- * system-only API), so the standalone app uses a deprecated but still functional full wake lock
- * with [PowerManager.ACQUIRE_CAUSES_WAKEUP]. Requires only the ordinary WAKE_LOCK permission. The
+ * A normal app cannot call the hidden `PowerManager.wakeUp` (it is a system-only API), so the
+ * standalone app uses a deprecated but still functional full wake lock with
+ * [PowerManager.ACQUIRE_CAUSES_WAKEUP]. Requires only the ordinary WAKE_LOCK permission. The
  * timed acquisition releases itself, there is nothing to clean up.
  */
 object StandaloneScreen {

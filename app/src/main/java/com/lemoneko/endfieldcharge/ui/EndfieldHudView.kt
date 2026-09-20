@@ -38,9 +38,9 @@ import kotlin.math.min
 class EndfieldHudView(
     context: Context,
     /**
-     * Assets of the *module* package. Inside SystemUI the view is built with the SystemUI context,
-     * whose assets do not contain our bundled font, so the controller hands over the module's own
-     * AssetManager. Defaults to the ambient context, which is correct inside the module app.
+     * AssetManager used to load the bundled Inter font. Defaults to the ambient context's assets,
+     * which is correct inside this app; the parameter exists so off-screen renderers can pass an
+     * explicit AssetManager.
      */
     assets: AssetManager = context.assets,
 ) : View(context) {

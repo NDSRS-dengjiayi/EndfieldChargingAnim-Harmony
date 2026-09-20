@@ -3,24 +3,12 @@ package com.lemoneko.endfieldcharge.core
 import android.util.Log
 
 /**
- * Single log tag so `adb logcat -s EndfieldCharge:*` shows everything the module does.
- * All module logging goes through here; do not scatter bare `Log` calls with other tags.
- *
- * Logs also go to the Xposed log once [attach] has been called. That is not a nicety: on the
- * OnePlus 15, `android.util.Log` output from the hooked SystemUI process never reaches logcat,
- * while the framework's own log does, so without this the module is silent on that device.
+ * Single log tag so `adb logcat -s EndfieldCharge:*` shows everything the app does.
+ * All app logging goes through here; do not scatter bare `Log` calls with other tags.
  */
 internal object HudLog {
 
     const val TAG = "EndfieldCharge"
-
-    @Volatile
-    private var sink: ((priority: Int, tag: String, message: String) -> Unit)? = null
-
-    /** Routes module logs into the Xposed log as well. Called once, from the module entry point. */
-    fun attach(sink: (priority: Int, tag: String, message: String) -> Unit) {
-        this.sink = sink
-    }
 
     fun i(scope: String, message: String) = emit(Log.INFO, scope, message, null)
 
@@ -37,6 +25,5 @@ internal object HudLog {
         } else {
             Log.println(priority, TAG, "$text\n${Log.getStackTraceString(tr)}")
         }
-        sink?.invoke(priority, TAG, if (tr == null) text else "$text: $tr")
     }
 }
