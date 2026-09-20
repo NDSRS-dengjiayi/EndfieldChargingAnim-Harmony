@@ -11,8 +11,7 @@ android {
 
     defaultConfig {
         applicationId = "com.lemoneko.endfieldcharge"
-        // The hooks are only verified on Android 15/16, but the settings/preview app only needs
-        // WindowInsets (API 30), so keep the install floor at 31 to allow sideloading previews.
+        // Standalone no-root mode targets HarmonyOS/EMUI on Android 12 (API 31).
         minSdk = 31
         targetSdk = 35
         versionCode = 1
@@ -33,14 +32,6 @@ android {
     buildFeatures {
         buildConfig = true
     }
-
-    packaging {
-        resources {
-            // Keep the libxposed entry descriptors; the default merger is happy with them,
-            // this is only here to make the intent explicit.
-            excludes += setOf()
-        }
-    }
 }
 
 kotlin {
@@ -50,10 +41,6 @@ kotlin {
 }
 
 dependencies {
-    // Provided by the Xposed framework at runtime; must never be bundled into the APK.
-    compileOnly(libs.libxposed.api)
-    compileOnly(libs.androidx.annotation)
-
     testImplementation(libs.junit)
     // android.jar only ships throwing stubs for org.json, so the JVM tests need the real one.
     testImplementation(libs.json)

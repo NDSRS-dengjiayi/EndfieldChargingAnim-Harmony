@@ -36,7 +36,6 @@ import com.lemoneko.endfieldcharge.core.HudPlayMode
 import com.lemoneko.endfieldcharge.core.settings.HudSettings
 import com.lemoneko.endfieldcharge.core.timeline.HudTimeline
 import com.lemoneko.endfieldcharge.debug.FrameSheetRenderer
-import com.lemoneko.endfieldcharge.debug.SysfsProbe
 import com.lemoneko.endfieldcharge.settings.SettingsRepository
 import com.lemoneko.endfieldcharge.standalone.StandaloneLauncher
 import com.lemoneko.endfieldcharge.standalone.StandaloneMonitorService
@@ -44,14 +43,11 @@ import com.lemoneko.endfieldcharge.standalone.StandalonePrefs
 import java.io.File
 
 /**
- * Settings and preview screen.
+ * Settings and preview screen for the no-root standalone mode (HarmonyOS / EMUI).
  *
- * The HUD normally runs inside SystemUI behind an Xposed hook, which makes iteration slow and hard
- * to observe. This screen runs the exact same view and timeline in an ordinary app process, so the
- * animation can be played, scrubbed and dumped without touching the system UI.
- *
- * Edits go to a local store and are mirrored into the framework's remote preferences, which is how
- * the hooked SystemUI process reads them.
+ * This screen runs the exact same view and timeline used by the charging HUD, so the animation can
+ * be played and scrubbed in an ordinary app process. Edits are stored by the in-process
+ * [com.lemoneko.endfieldcharge.settings.SettingsProvider] and read live by the monitor service.
  *
  * The preview strip's top edge represents the top of the screen, so the offset slider value is
  * directly the distance from the top of the screen, the same number the overlay uses.
@@ -224,11 +220,6 @@ class MainActivity : Activity() {
             LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
                 addView(
-                    toggle("Replace the ROM animation", { it.enabled }) { s, v ->
-                        s.copy(enabled = v)
-                    },
-                )
-                addView(
                     toggle("Wake the screen on plug", { it.wakeOnPlug }) { s, v ->
                         s.copy(wakeOnPlug = v)
                     },
@@ -254,7 +245,6 @@ class MainActivity : Activity() {
             },
         )
         column.addView(button("Render frame sheets") { renderSheets() })
-        column.addView(button("Read battery sysfs") { status.text = SysfsProbe.report() })
 
         connection = TextView(this).apply {
             setTextColor(Color.LTGRAY)
@@ -549,7 +539,7 @@ class MainActivity : Activity() {
             showCue(lastCue)
 
             connection.text =
-                "changes are stored by SettingsProvider and picked up by SystemUI live"
+                "changes are saved locally and picked up by the monitor service live"
         } finally {
             binding = false
         }
